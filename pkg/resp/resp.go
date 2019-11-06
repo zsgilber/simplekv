@@ -2,7 +2,9 @@ package resp
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 )
@@ -48,12 +50,23 @@ func (r *RespConn) ReadValue() ([]byte, error) {
 }
 
 func (r *RespConn) ReadBulkString() ([]byte, error) {
-	n, err := r.readInt()
+	bulkLength, err := r.readInt()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(strconv.Itoa(n))
-	return nil, nil
+	if bulkLength == -1 {
+		return nil, nil // return nil to reprsent NULL BulkString value.
+	}
+
+	buf := make([]byte, bulkLength+2)
+	_, err = io.ReadFull(r, buf) // read number of bytes as indicated by bulkLength, plus the two line termination bytes.
+	if err != nil {
+		return nil, err
+	}
+	if buf[bulkLength] != '\r' || buf[bulkLength+1] != '\n' {
+		return nil, errors.New("invalid line termination")
+	}
+	return buf, nil
 }
 
 func (r *RespConn) readLine() ([]byte, error) {
