@@ -1,6 +1,7 @@
 package resp
 
 import (
+	"fmt"
 	"net"
 	"sync"
 )
@@ -42,9 +43,11 @@ func (s *Server) ListenAndServe(address string) error {
 }
 
 func (s *Server) handleConnection(conn net.Conn) error {
-	resp := NewRespConn(conn)
-
-	for {
-		resp.ReadByte()
+	respConn := NewRespConn(conn)
+	b, err := respConn.ReadValue()
+	if err != nil {
+		return err
 	}
+	fmt.Println(string(b))
+	return nil
 }
