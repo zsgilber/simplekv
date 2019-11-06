@@ -17,6 +17,14 @@ const (
 	Error        = '-'
 )
 
+type respError struct {
+	err error
+}
+
+func (e respError) Error() string {
+	return fmt.Sprintf("resp protocol error: %v", e.err)
+}
+
 // RespConn reads and writes RESP values over a connection.
 type RespConn struct {
 	*bufio.Reader
@@ -64,7 +72,7 @@ func (r *RespConn) ReadBulkString() ([]byte, error) {
 		return nil, err
 	}
 	if buf[bulkLength] != '\r' || buf[bulkLength+1] != '\n' {
-		return nil, errors.New("invalid line termination")
+		return nil, respError{errors.New("invalid line termination")}
 	}
 	return buf, nil
 }
