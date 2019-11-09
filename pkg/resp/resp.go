@@ -9,24 +9,22 @@ import (
 	"strconv"
 )
 
-type Type byte
-
 const (
-	SimpleString Type = '+'
-	BulkString   Type = '$'
-	Integer      Type = ':'
-	Array        Type = '*'
-	Error        Type = '-'
+	SimpleString = '+'
+	BulkString   = '$'
+	Integer      = ':'
+	Array        = '*'
+	Error        = '-'
 )
 
 // TODO: figure out whether i want object or not
-type Object struct {
-	t       Type
-	val     []byte
-	integer int
-	string  []byte
-	array   []Object
-}
+// type Object struct {
+// 	t       Type
+// 	val     []byte
+// 	integer int
+// 	string  []byte
+// 	array   []Object
+// }
 
 type respError struct {
 	err error
