@@ -19,6 +19,7 @@ const (
 	Error        Type = '-'
 )
 
+// TODO: figure out whether i want object or not
 type Object struct {
 	t       Type
 	val     []byte
