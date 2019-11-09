@@ -9,13 +9,23 @@ import (
 	"strconv"
 )
 
+type Type byte
+
 const (
-	SimpleString = '+'
-	BulkString   = '$'
-	Integer      = ':'
-	Array        = '*'
-	Error        = '-'
+	SimpleString Type = '+'
+	BulkString   Type = '$'
+	Integer      Type = ':'
+	Array        Type = '*'
+	Error        Type = '-'
 )
+
+type Object struct {
+	t       Type
+	val     []byte
+	integer int
+	string  []byte
+	array   []Object
+}
 
 type respError struct {
 	err error
@@ -49,7 +59,7 @@ func (r *RespConn) ReadValue() ([]byte, error) {
 	switch b {
 	case Array:
 		fmt.Println("got to array")
-		return nil, err
+		return r.ReadArray()
 	case BulkString:
 		fmt.Println("got to bulk string")
 		return r.ReadBulkString()
@@ -75,6 +85,17 @@ func (r *RespConn) ReadBulkString() ([]byte, error) {
 		return nil, respError{errors.New("invalid line termination")}
 	}
 	return buf, nil
+}
+
+func (r *RespConn) ReadArray() ([]byte, error) {
+	arrayLength, err := r.readInt()
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < arrayLength; i++ {
+		r.ReadValue()
+	}
+	return nil, nil
 }
 
 func (r *RespConn) readLine() ([]byte, error) {
