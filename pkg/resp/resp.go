@@ -9,22 +9,32 @@ import (
 	"strconv"
 )
 
+type Type byte
+
 const (
-	SimpleString = '+'
-	BulkString   = '$'
-	Integer      = ':'
-	Array        = '*'
-	Error        = '-'
+	SimpleString Type = '+'
+	BulkString   Type = '$'
+	Integer      Type = ':'
+	Array        Type = '*'
+	Error        Type = '-'
 )
 
 // TODO: figure out whether i want object or not
-// type Object struct {
-// 	t       Type
-// 	val     []byte
-// 	integer int
-// 	string  []byte
-// 	array   []Object
-// }
+type Object struct {
+	t       Type
+	integer int
+	str     []byte
+	array   []Object
+	null    bool
+}
+
+var (
+	nullObject = Object{null: true}
+)
+
+type Command struct {
+	Args []Object
+}
 
 type respError struct {
 	err error
@@ -50,56 +60,62 @@ func NewRespConn(conn net.Conn) *RespConn {
 	}
 }
 
-func (r *RespConn) ReadValue() ([]byte, error) {
+func (r *RespConn) ReadObject() (Object, error) {
 	b, err := r.ReadByte()
 	if err != nil {
-		return nil, err
+		return nullObject, err
 	}
 	switch b {
-	case Array:
+	case '*':
 		fmt.Println("got to array")
 		return r.ReadArray()
-	case BulkString:
+	case '$':
 		fmt.Println("got to bulk string")
 		return r.ReadBulkString()
 	}
-	return nil, nil
+	return nullObject, nil
 }
 
-func (r *RespConn) ReadBulkString() ([]byte, error) {
+func (r *RespConn) ReadBulkString() (Object, error) {
 	bulkLength, err := r.readInt()
 	if err != nil {
-		return nil, err
+		return nullObject, err
 	}
 	if bulkLength == -1 {
-		return nil, nil // return nil to reprsent NULL BulkString value.
+		return nullObject, nil
 	}
 
 	buf := make([]byte, bulkLength+2)
 	_, err = io.ReadFull(r, buf) // read number of bytes as indicated by bulkLength, plus the two line termination bytes.
 	if err != nil {
-		return nil, err
+		return nullObject, err
 	}
 	if buf[bulkLength] != '\r' || buf[bulkLength+1] != '\n' {
-		return nil, respError{errors.New("invalid line termination")}
+		return nullObject, respError{errors.New("invalid line termination")}
 	}
-	return buf, nil
+	return Object{
+		t:   BulkString,
+		str: buf,
+	}, nil
 }
 
-func (r *RespConn) ReadArray() ([][]byte, error) {
+func (r *RespConn) ReadArray() (Object, error) {
 	arrayLength, err := r.readInt()
 	if err != nil {
-		return nil, err
+		return nullObject, err
 	}
-	array := make([][]byte, arrayLength)
+	array := make([]Object, arrayLength)
 	for i := 0; i < arrayLength; i++ {
-		val, err := r.ReadValue()
+		val, err := r.ReadObject()
 		if err != nil {
-			return nil, err
+			return nullObject, err
 		}
 		array[i] = val
 	}
-	return nil, nil
+	return Object{
+		t:     Array,
+		array: array,
+	}, nil
 }
 
 func (r *RespConn) readLine() ([]byte, error) {
