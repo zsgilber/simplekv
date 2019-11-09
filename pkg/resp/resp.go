@@ -88,13 +88,18 @@ func (r *RespConn) ReadBulkString() ([]byte, error) {
 	return buf, nil
 }
 
-func (r *RespConn) ReadArray() ([]byte, error) {
+func (r *RespConn) ReadArray() ([][]byte, error) {
 	arrayLength, err := r.readInt()
 	if err != nil {
 		return nil, err
 	}
+	array := make([][]byte, arrayLength)
 	for i := 0; i < arrayLength; i++ {
-		r.ReadValue()
+		val, err := r.ReadValue()
+		if err != nil {
+			return nil, err
+		}
+		array[i] = val
 	}
 	return nil, nil
 }
