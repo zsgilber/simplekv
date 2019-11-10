@@ -34,21 +34,29 @@ func (s *Server) ListenAndServe(address string) error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			//TODO: log error
+			fmt.Println(err)
 			continue
 		}
-
 		go s.handleConnection(conn)
 	}
 }
 
 func (s *Server) handleConnection(conn net.Conn) error {
 	respConn := NewRespConn(conn)
-	object, err := respConn.ReadObject()
+	command, err := respConn.ReadCommand()
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println(string(object.str))
+	commandName := string(command.Args[0].str)
+	fmt.Println(len(commandName))
+	switch commandName {
+	case "set":
+		fmt.Println("here")
+		fmt.Printf("set key %v to value %v", string(command.Args[1].str), string(command.Args[2].str))
+		return nil
+	default:
+		fmt.Println("unknown command")
+	}
 	return nil
 }
