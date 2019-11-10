@@ -60,6 +60,16 @@ func NewRespConn(conn net.Conn) *RespConn {
 	}
 }
 
+func (r *RespConn) ReadCommand() (Command, error) {
+	object, err := r.ReadObject()
+	if err != nil {
+		return Command{}, err
+	}
+	return Command{
+		Args: object.array,
+	}, nil
+}
+
 func (r *RespConn) ReadObject() (Object, error) {
 	b, err := r.ReadByte()
 	if err != nil {
@@ -67,10 +77,8 @@ func (r *RespConn) ReadObject() (Object, error) {
 	}
 	switch b {
 	case '*':
-		fmt.Println("got to array")
 		return r.ReadArray()
 	case '$':
-		fmt.Println("got to bulk string")
 		return r.ReadBulkString()
 	}
 	return nullObject, nil
@@ -95,7 +103,7 @@ func (r *RespConn) ReadBulkString() (Object, error) {
 	}
 	return Object{
 		t:   BulkString,
-		str: buf,
+		str: buf[:bulkLength],
 	}, nil
 }
 
