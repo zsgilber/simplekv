@@ -44,10 +44,11 @@ func (s *Server) ListenAndServe(address string) error {
 
 func (s *Server) handleConnection(conn net.Conn) error {
 	respConn := NewRespConn(conn)
-	b, err := respConn.ReadValue()
+	object, err := respConn.ReadObject()
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
-	fmt.Println(string(b))
+	fmt.Println(string(object.str))
 	return nil
 }
