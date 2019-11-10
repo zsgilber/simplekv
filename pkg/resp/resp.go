@@ -137,11 +137,3 @@ func (r *RespConn) readInt() (int, error) {
 	}
 	return int(n), nil
 }
-
-// func (r *RespConn) readLine() ([]byte, error) {
-// 	line, err := r.ReadBytes('\n')
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// }
