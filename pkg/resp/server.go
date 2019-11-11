@@ -25,7 +25,7 @@ func (s *Server) AddHandleFunc(command string, handler func(resp *RespConn)) {
 	s.handlers[command] = handler
 }
 
-func (s *Server) ListenAndServe(address string) error {
+func (s *Server) ListenAndServe(address string, kv map[string]string) error {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
@@ -37,11 +37,11 @@ func (s *Server) ListenAndServe(address string) error {
 			fmt.Println(err)
 			continue
 		}
-		go s.handleConnection(conn)
+		go s.handleConnection(conn, kv)
 	}
 }
 
-func (s *Server) handleConnection(conn net.Conn) error {
+func (s *Server) handleConnection(conn net.Conn, kv map[string]string) error {
 	respConn := NewRespConn(conn)
 	command, err := respConn.ReadCommand()
 	if err != nil {
@@ -54,7 +54,11 @@ func (s *Server) handleConnection(conn net.Conn) error {
 	case "set":
 		fmt.Println("here")
 		fmt.Printf("set key %v to value %v", string(command.Args[1].str), string(command.Args[2].str))
+		kv[string(command.Args[1].str)] = string(command.Args[2].str)
 		return nil
+	case "get":
+		fmt.Println("inside get")
+		fmt.Println(kv[string(command.Args[1].str)])
 	default:
 		fmt.Println("unknown command")
 	}
