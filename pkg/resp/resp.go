@@ -19,7 +19,6 @@ const (
 	Error        Type = '-'
 )
 
-// TODO: figure out whether i want object or not
 type Object struct {
 	t       Type
 	integer int
@@ -126,6 +125,7 @@ func (r *RespConn) ReadArray() (Object, error) {
 	}, nil
 }
 
+// readLine reads up to a newline, returning the bytes before the line terminators.
 func (r *RespConn) readLine() ([]byte, error) {
 	b, err := r.ReadBytes('\n')
 	if err != nil {
