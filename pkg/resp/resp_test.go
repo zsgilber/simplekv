@@ -28,7 +28,22 @@ func TestRespConn_readLine(t *testing.T) {
 			want:    []byte("6"),
 			wantErr: false,
 		},
-		//TODO: test cases
+		{
+			name: "valid string",
+			fields: fields{
+				Reader: bufio.NewReader(strings.NewReader("test\r\n")),
+			},
+			want:    []byte("test"),
+			wantErr: false,
+		},
+		{
+			name: "invalid - missing CR",
+			fields: fields{
+				Reader: bufio.NewReader(strings.NewReader("test\n")),
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
