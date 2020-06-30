@@ -69,6 +69,20 @@ func (r *RespConn) ReadCommand() (Command, error) {
 	}, nil
 }
 
+// WriteSimpleString takes a string and writes the corresponding RESP Simple String to the connection's writer.
+func (r *RespConn) WriteSimpleString(simpleStr string) error {
+	if err := r.WriteByte('+'); err != nil {
+		return err
+	}
+	if _, err := r.WriteString(simpleStr); err != nil {
+		return err
+	}
+	if _, err := r.Write([]byte{'\r', '\n'}); err != nil {
+		return err
+	}
+	return r.Flush()
+}
+
 func (r *RespConn) ReadObject() (Object, error) {
 	b, err := r.ReadByte()
 	if err != nil {
