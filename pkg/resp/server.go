@@ -65,6 +65,8 @@ func (s *Server) handleConnection(conn net.Conn, store kv.Store) error {
 		if err != nil {
 			return err
 		}
+	case "ping":
+		respConn.WriteSimpleString("PONG")
 	default:
 		fmt.Println("unknown command")
 	}
