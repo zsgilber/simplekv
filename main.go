@@ -10,7 +10,7 @@ import (
 
 func main() {
 	m := make(map[string]string)
-	store := kv.MapStore{
+	store := &kv.MapStore{
 		Map: m,
 	}
 	server := resp.NewServer(store)
