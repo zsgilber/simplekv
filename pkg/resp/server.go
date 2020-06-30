@@ -3,6 +3,7 @@ package resp
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/zsgilber/simplekv/pkg/kv"
@@ -45,6 +46,7 @@ func (s *Server) ListenAndServe(address string) error {
 	}
 }
 
+//TODO: replace the error return with a WriteError for the respConn
 func (s *Server) handleConnection(conn net.Conn, store kv.Store) error {
 	respConn := NewRespConn(conn)
 	command, err := respConn.ReadCommand()
@@ -54,11 +56,12 @@ func (s *Server) handleConnection(conn net.Conn, store kv.Store) error {
 	}
 	commandName := string(command.Args[0].str)
 	fmt.Println(len(commandName))
-	switch commandName {
+	switch strings.ToLower(commandName) {
 	case "set":
-		fmt.Printf("set key %v to value %v", string(command.Args[1].str), string(command.Args[2].str))
-		store.Set(string(command.Args[1].str), string(command.Args[2].str))
-		return nil
+		if err := store.Set(string(command.Args[1].str), string(command.Args[2].str)); err != nil {
+			return err
+		}
+		respConn.WriteSimpleString("OK")
 	case "get":
 		value, err := store.Get(string(command.Args[1].str))
 		fmt.Println(value)
